@@ -13,12 +13,11 @@
 typedef struct
 {
   char nombre[MAX];
-  unsigned short prioridad;
-  HashMap *Tarea;
+  int prioridad;
+  HashMap *Tareas;
   List *TareasPorHacer;
   Stack *registro; // Una pila que registra las funciones del usuario para eliminarlas 
   bool realizado; // registra si la 
-
 
 } Tarea; // Definimos nuestra estructura a trabajar.
 
@@ -134,41 +133,104 @@ char *gets_csv_field(char *tmp, int k) //
   return NULL;
 }
 
+void preguntarNombreTarea(char *nombreTarea) // Solicita que el usuario ingrese el nombre de la tarea
+{
+  printf("Ingrese el nombre de usuario de la tarea:\n");
+  getchar();
+  scanf("%30[^\n]s", nombreTarea);
+}
 
 // Funciones 
 
 // 1.
-void agregarTarea()
+void agregarTarea(HashMap *mapa, bool *registrada)
 {
-  printf("Funcion 1\n\n");
+  Tarea *tareaAux = malloc(sizeof(Tarea));
+  tareaAux -> Tareas = createMap(1000);
+  tareaAux -> registro = stack_create();
+
+  char nombreTarea[MAX]; 
+  int prioridad;
+
+  preguntarNombreTarea(nombreTarea);
+  strcpy(tareaAux -> nombre, nombreTarea);
+
+  printf("\nIngrese la prioridad de la tiene la tarea:\n");
+  scanf("%d", &prioridad);
+
+  tareaAux -> prioridad = prioridad;
+  
+  insertMap(mapa, tareaAux -> nombre, tareaAux);
+
+  *registrada = true;
+  stack_push(tareaAux -> registro, "1");
+  
+  printf("\nTarea registrada!!\n\n");
 }
 
 // 2.
-void establecerPrecedencia()
+void establecerPrecedencia(HashMap *mapa)
 {
-  printf("Funcion 2\n\n");
+  Tarea *tareaAux;
+
+
+
+  
+
+  stack_push(tareaAux -> registro, "2");
 }
 
 // 3. 
-void mostrarTareasPendientes()
+void mostrarTareasPendientes(HashMap *mapa)
 {  
-  printf("Funcion 3\n\n");
+  Pair *aux = firstMap(mapa);
+  int cont = 1;
+
+  while(aux != NULL)
+  {
+    Tarea *tareaAux = aux -> value;
+
+    if(aux == NULL) aux = nextMap(mapa);
+    else 
+    {
+      if(cont == 1)
+      { 
+        puts("~~~~~~~~~~~~~~~~~ TAREAS PENDIENTES ~~~~~~~~~~~~~~~~~\n");
+      }
+      
+      printf("%d. %s (Prioridad: %d)\n\n", cont, tareaAux -> nombre, tareaAux -> prioridad);
+      
+    }
+    
+    aux = nextMap(mapa);
+    cont++;
+  }
+  puts("~~~~~~~~~~~~~~~~~~~~~~~~~~~o~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
 }
 
 // 4.
-void eliminarTarea()
+void eliminarTarea(HashMap *mapa)
 {
-  printf("Funcion 4\n\n");
+  Tarea *tareaAux;
+
+
+
+
+  
+  stack_push(tareaAux -> registro, "4");
 }
 
 // 5.
-void deshacerAccion()
+void deshacerAccion(HashMap *mapa)
 {
-  printf("Funcion 5\n\n");
+  Tarea *tareaAux;
+
+
+  
 }
 
 // 6.
-void importarTareas()
+void importarTareas(HashMap *mapa)
 {
   printf("Funcion 6\n\n");
 }
@@ -185,6 +247,7 @@ int main()
                              |___/             |___/                                                        
   */
 
+  HashMap *mapa = createMap(10001);
   
   int user_continue = 1;
 
@@ -200,7 +263,7 @@ int main()
     
     validarOpcion(&opcion); // Validamos que opción sea un número.
     
-    if(registrada == true && opcion != 1 && opcion != 6 && opcion != 7)
+    if(registrada == false && opcion != 1 && opcion != 6 && opcion != 7)
     {
       printf("No hay tareas registradas, debe registrar una primero.\n");
     }
@@ -208,38 +271,37 @@ int main()
     switch(opcion)
     {
       case 1 :
-        agregarTarea();
+        agregarTarea(mapa, &registrada);
         validar(&user_continue);
         break;
 
       case 2 :
-        establecerPrecedencia();
+        establecerPrecedencia(mapa);
         validar(&user_continue);
         break;
 
       case 3 :
-        mostrarTareasPendientes();
+        mostrarTareasPendientes(mapa);
         validar(&user_continue);
         break;
 
       case 4 :
-        eliminarTarea();
+        eliminarTarea(mapa);
         validar(&user_continue);
         break;
 
       case 5 :
-        deshacerAccion();
+        deshacerAccion(mapa);
         validar(&user_continue);
         break;
 
       case 6 :
-        importarTareas();
+        importarTareas(mapa);
         validar(&user_continue);
         break;
       
       case 7 :
         printf("Gracias por usar el programa, adiós!");
-        
         return 0;
     }
     
