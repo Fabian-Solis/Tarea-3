@@ -14,13 +14,17 @@ typedef struct
 {
   char nombre[MAX];
   int prioridad;
-  HashMap *Tareas;
-  List *TareasPorHacer;
-  Stack *registro; // Una pila que registra las funciones del usuario para eliminarlas 
+  List *precedencia;
   bool realizado; // registra si la 
 
 } Tarea; // Definimos nuestra estructura a trabajar.
 
+typedef struct
+{
+  Stack *historial;
+  Stack *agregadas;
+  Stack *marcadas;
+} Pila;
 
 // Subfunciones
 
@@ -135,7 +139,7 @@ char *gets_csv_field(char *tmp, int k) //
 
 void preguntarNombreTarea(char *nombreTarea) // Solicita que el usuario ingrese el nombre de la tarea
 {
-  printf("Ingrese el nombre de usuario de la tarea:\n");
+  printf("Ingrese el nombre de la tarea:\n");
   getchar();
   scanf("%30[^\n]s", nombreTarea);
 }
@@ -143,43 +147,59 @@ void preguntarNombreTarea(char *nombreTarea) // Solicita que el usuario ingrese 
 // Funciones 
 
 // 1.
-void agregarTarea(HashMap *mapa, bool *registrada)
+void agregarTarea(HashMap *mapa, Pila *stack, int *registrada)
 {
   Tarea *tareaAux = malloc(sizeof(Tarea));
-  tareaAux -> Tareas = createMap(1000);
-  tareaAux -> registro = stack_create();
+  tareaAux->precedencia = createList();
 
-  char nombreTarea[MAX]; 
+  char nombreTarea[MAX];
   int prioridad;
 
   preguntarNombreTarea(nombreTarea);
   strcpy(tareaAux -> nombre, nombreTarea);
 
-  printf("\nIngrese la prioridad de la tiene la tarea:\n");
+  printf("\nIngrese la prioridad de la tarea:\n");
   scanf("%d", &prioridad);
 
   tareaAux -> prioridad = prioridad;
   
   insertMap(mapa, tareaAux -> nombre, tareaAux);
+  Pair *par = searchMap(mapa, nombreTarea);
 
-  *registrada = true;
-  stack_push(tareaAux -> registro, "1");
+  (*registrada)++;
+
+  stack_push(stack -> historial, "1");
+  stack_push(stack -> agregadas, par);
   
   printf("\nTarea registrada!!\n\n");
 }
 
 // 2.
-void establecerPrecedencia(HashMap *mapa)
+void establecerPrecedencia(HashMap *mapa, Pila *stack)
 {
-  Tarea *tareaAux;
-
-
-
+  char nombreTarea1[MAX],nombreTarea2[MAX];
   
+  printf("Ingrese el Nombre de dos tareas existentes 1(Precedente) 2(Tarea):\n");
+  scanf("%s %s", nombreTarea1, nombreTarea2);
 
-  stack_push(tareaAux -> registro, "2");
+  while(searchMap(mapa, nombreTarea1) == NULL || searchMap(mapa, nombreTarea2) == NULL)
+  {
+    printf("Ingrese nombre de Tareas Valido.\n");
+    scanf("%s %s", nombreTarea1, nombreTarea2);
+  }
+  
+  Pair *tareaPrecedente = searchMap(mapa,nombreTarea1);
+  Pair *tareaPorHacer = searchMap(mapa,nombreTarea2);
+  Tarea *tareaAux = tareaPrecedente->value;
+  Tarea *tareaAux2 = tareaPorHacer->value;
+  
+  pushFront(tareaAux->precedencia,tareaAux2);
+  printf("\nTarea registrada!!\n\n");
+
+  stack_push(stack -> historial, "2");
+  
+  return;
 }
-
 // 3. 
 void mostrarTareasPendientes(HashMap *mapa)
 {  
@@ -198,8 +218,17 @@ void mostrarTareasPendientes(HashMap *mapa)
         puts("~~~~~~~~~~~~~~~~~ TAREAS PENDIENTES ~~~~~~~~~~~~~~~~~\n");
       }
       
-      printf("%d. %s (Prioridad: %d)\n\n", cont, tareaAux -> nombre, tareaAux -> prioridad);
+      printf("%d. %s (Prioridad: %d) ", cont, tareaAux -> nombre, tareaAux -> prioridad);
       
+      if(tareaAux->precedencia != NULL)  
+      {
+        char *auxLista = firstList(tareaAux -> precedencia);
+        while(auxLista != NULL)
+        {
+          printf("%s\n\n",auxLista);
+          auxLista = nextList(tareaAux -> precedencia);
+        }
+      }
     }
     
     aux = nextMap(mapa);
@@ -209,23 +238,60 @@ void mostrarTareasPendientes(HashMap *mapa)
 }
 
 // 4.
-void eliminarTarea(HashMap *mapa)
+void marcarTarea(HashMap *mapa, Pila *stack)
 {
   Tarea *tareaAux;
-
 
 
 
   
-  stack_push(tareaAux -> registro, "4");
+  stack_push(stack -> historial, "4");
 }
 
 // 5.
-void deshacerAccion(HashMap *mapa)
+void deshacerAccion(HashMap *mapa, Pila *stack)
 {
   Tarea *tareaAux;
+  
+  char *datoRegistro = stack_pop(stack -> historial);
+  printf("\n%c\n\n", *datoRegistro);
 
+  
+  if(strcmp(datoRegistro, "0") == 0)
+  {
+    printf("\nNo se pueden deshacer más acciones. \n\n");
+    stack_push(stack -> historial, "0");
+  }
+  /*
+  else 
+  if(strcmp(datoRegistro, "1") == 0)
+  {
+    Pair *par = stack_pop(tareaAux -> agregadas);
+    insertMap(mapa, tareaAux);
 
+    printf("\nLa última acción fue deshecha y el ítem ' %s ' fue eliminado!\n\n", item);
+    jugadorAux -> numeroItems--;
+  }
+  
+  else 
+  if(strcmp(datoRegistro, "2") == 0)
+  {
+    char *item = stack_pop(jugadorAux -> registroItem);
+    insertMap(jugadorAux -> items, item, NULL);
+    
+    printf("\nLa última acción fue deshecha y el ítem ' %s ' fue agregado!\n\n", item);
+    jugadorAux->numeroItems++;
+  }
+  else 
+  if(strcmp(datoRegistro, "4") == 0)
+  {
+    //usar resgistroSum para restarle lo previamente sumado
+    char *auxSum = stack_pop(jugadorAux -> registroSum);
+    int numSum = atoi(auxSum);
+    jugadorAux -> puntosHabilidad = jugadorAux -> puntosHabilidad - numSum;
+    printf("\nLa última acción fue deshecha y al jugador se le disminuyeron ' %i ' puntos!\n\n", numSum);
+  }
+  */
   
 }
 
@@ -248,10 +314,17 @@ int main()
   */
 
   HashMap *mapa = createMap(10001);
+
+  Pila *stack = malloc(sizeof(Pila));
+  stack -> historial = stack_create();
+  stack_push(stack -> historial, "0");
+  stack -> agregadas = stack_create();
+  stack -> marcadas = stack_create();
+  
   
   int user_continue = 1;
 
-  bool registrada = false;
+  int registrada = 0;
 
   printf("Bienvenido! :D\n");
 
@@ -263,35 +336,43 @@ int main()
     
     validarOpcion(&opcion); // Validamos que opción sea un número.
     
-    if(registrada == false && opcion != 1 && opcion != 6 && opcion != 7)
+    if(registrada == 0 && opcion != 1 && opcion != 6 && opcion != 7 && opcion != 2)
     {
-      printf("No hay tareas registradas, debe registrar una primero.\n");
+      printf("No hay tareas agregadas, debe registrar una primero.\n");
     }
     else
     switch(opcion)
     {
       case 1 :
-        agregarTarea(mapa, &registrada);
+        agregarTarea(mapa, stack, &registrada);
         validar(&user_continue);
         break;
 
       case 2 :
-        establecerPrecedencia(mapa);
-        validar(&user_continue);
-        break;
-
+        if(registrada < 2) 
+        {
+          printf("Debe tener al menos dos tareas agregadas para establecer una precedencia.\n");
+          break;
+        }
+        else
+        {
+          establecerPrecedencia(mapa,stack);
+          validar(&user_continue);
+          break;
+        }
+          
       case 3 :
         mostrarTareasPendientes(mapa);
         validar(&user_continue);
         break;
 
       case 4 :
-        eliminarTarea(mapa);
+        marcarTarea(mapa, stack);
         validar(&user_continue);
         break;
 
       case 5 :
-        deshacerAccion(mapa);
+        deshacerAccion(mapa, stack);
         validar(&user_continue);
         break;
 
