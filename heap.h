@@ -8,6 +8,7 @@ void* heap_top(Heap* pq);
 void* heap_top_priority(Heap* pq);
 void heap_push(Heap* pq, void* data, int priority);
 void heap_pop(Heap* pq);
+int heap_size(Heap *pq);
 
 
 #endif /* HashMap_h */

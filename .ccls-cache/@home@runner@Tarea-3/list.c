@@ -144,6 +144,24 @@ void *popCurrent(List * list)
     return data;
 }
 
+void *searchList(List *list, void *data)
+{
+  if (list == NULL || data == NULL)
+  {
+    return NULL;
+  }
+
+  Node *current = firstList(list);
+  while (current != NULL)
+  {
+    if (current->data == data)
+      return current;
+    current = current->next;
+  }
+
+  return NULL;
+}
+
 
 void cleanList(List * list)
 {

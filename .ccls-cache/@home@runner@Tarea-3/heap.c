@@ -43,29 +43,33 @@ void *heap_top_priority(Heap* pq)
   return pq -> heapArray[0].priority;
 }
 
-void heap_push(Heap *pq, void *data, int priority)
+
+void heap_push(Heap* pq, void* data, int priority){
+
+  if(pq->size == pq->capac)
+  {
+    pq->capac = pq->capac * 2+1;
+    pq->heapArray = realloc(pq->heapArray,pq->capac * sizeof(heapElem));
+  }
+
+  int posicion = pq->size;
+
+  while(priority > pq->heapArray[(posicion-1) / 2 ].priority && posicion)
+    {
+      pq->heapArray[posicion] = pq->heapArray[(posicion-1)/2];
+      posicion = (posicion -1) / 2;
+    }
+  pq->heapArray[posicion].data = data;
+  pq->heapArray[posicion].priority = priority;
+  pq->size++;
+}
+int heap_size(Heap *pq)
 {
-  int i = pq -> size;
-  
-  if(pq -> size == pq -> capac)
-  {
-    pq -> capac = pq -> capac * 2 + 1;
-    pq -> heapArray = realloc(pq -> heapArray, pq -> capac * sizeof(heapElem));
-  }
-
-  while (priority > (pq -> heapArray[(i - 1) / 2].priority) && i)
-  {
-    pq -> heapArray[i] = pq -> heapArray[(i - 1) / 2];
-    i = (i - 1) / 2;
-  }
-
-  pq -> heapArray[i].data = data;
-  pq -> heapArray[i].priority = priority;
-  pq -> size++;
+  return pq->size;
 }
 
-void heap_pop(Heap *pq)
-{
+void heap_pop(Heap* pq){
+
   int hijoMenor = 1, hijoMayor = 2, pos = 0;
   heapElem auxiliar;
   
@@ -87,4 +91,8 @@ void heap_pop(Heap *pq)
     hijoMenor = hijoMenor * 2 + 1;
     hijoMayor = hijoMayor * 2 + 2;
   }
+  
+
+  
+
 }

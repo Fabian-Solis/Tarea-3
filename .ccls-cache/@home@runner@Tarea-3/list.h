@@ -25,6 +25,8 @@ void * popBack(List * list);
 
 void * popCurrent(List * list);
 
+void *searchList(List *list, void *data);
+
 void cleanList(List * list);
 
 #endif /* List_h */
