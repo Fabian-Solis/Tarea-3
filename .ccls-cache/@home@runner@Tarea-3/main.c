@@ -18,6 +18,7 @@ typedef struct
   bool visitado;
   bool realizado; // registra si la 
   bool precede;
+  bool ingresadoHeap;
 
 } Tarea; // Definimos nuestra estructura a trabajar.
 
@@ -146,17 +147,37 @@ void preguntarNombreTarea(char *nombreTarea) // Solicita que el usuario ingrese 
   scanf("%30[^\n]s", nombreTarea);
 }
 
+void poblarHeap(HashMap *mapaAux, Heap *pendientes)
+{
+  Pair *aux = firstMap(mapaAux);
+  
+  while(aux != NULL)
+  {
+    Tarea *tareaAux = aux -> value;
+    
+    if(tareaAux -> precede == false && tareaAux -> ingresadoHeap == false) 
+    {
+      heap_push(pendientes, tareaAux -> nombre, tareaAux -> prioridad);
+      tareaAux -> ingresadoHeap = true; 
+    }
+    aux = nextMap(mapaAux);
+  }
+}
+
 // Funciones 
+/*
 bool tienePrecedencia(Tarea* tarea, List* precedencia) {
-  List* aux = precedencia;
+  List* aux = firstList(precedencia);
+  
   while (aux != NULL) {
-    Tarea* tareaActual = firstList(precedencia);
+    ;
     if (strcmp(tareaActual->nombre, tarea->nombre) == 0)
       return true;
     aux = nextList(precedencia);
   }
   return false;
 }
+*/
 
 // 1.
 void agregarTarea(HashMap *mapa, Pila *stack, int *registrada)
@@ -168,6 +189,7 @@ void agregarTarea(HashMap *mapa, Pila *stack, int *registrada)
   int prioridad;
 
   preguntarNombreTarea(nombreTarea);
+  
   strcpy(tareaAux -> nombre, nombreTarea);
 
   printf("\nIngrese la prioridad de la tarea:\n");
@@ -182,6 +204,7 @@ void agregarTarea(HashMap *mapa, Pila *stack, int *registrada)
   tareaAux -> precede = false;
   tareaAux -> realizado = false;
   tareaAux->visitado = false;
+  tareaAux -> ingresadoHeap = false;
 
   stack_push(stack -> historial, "1");
   stack_push(stack -> agregadas, par);
@@ -211,7 +234,8 @@ void establecerPrecedencia(HashMap *mapa, Pila *stack)
   Pair *tareaPorHacer = searchMap(mapa,nombreTarea2);
   Tarea *tareaAux = tareaPrecedente->value;
   Tarea *tareaAux2 = tareaPorHacer->value;
-  
+
+  tareaAux2 -> precede = true;
   pushFront(tareaAux2->precedencia,tareaAux);
 
   stack_push(stack -> historial, "2");
@@ -220,9 +244,146 @@ void establecerPrecedencia(HashMap *mapa, Pila *stack)
   
   return;
 }
+
 // 3. 
 void mostrarTareasPendientes(HashMap *mapa)
 {  
+  Pair* aux = firstMap(mapa);
+  
+  Heap *pendientes = createHeap();
+  HashMap* mapaAux = createMap(10001);
+  
+  while (aux != NULL) 
+  {
+    void* clave = aux->key;
+    Tarea *valor = aux->value;
+    
+    insertMap(mapaAux, clave, valor);
+    
+    aux = nextMap(mapa);
+  }
+
+  while (true)
+  {
+    poblarHeap(mapaAux, pendientes);
+    
+    if(heap_size(pendientes) == 0) 
+    {
+      puts("");
+      return;
+    }
+    
+    Pair *raizHeap = searchMap(mapaAux, heap_top(pendientes));
+    Tarea *tareaAux = raizHeap -> value;
+
+    Pair *parAux = searchMap(mapa, heap_top(pendientes));
+    Tarea *tareasOriginales = parAux -> value;
+
+    char *nombreAux = tareaAux ->nombre;
+
+    printf("\n%s (Prioridad: %d)", tareasOriginales -> nombre, tareasOriginales -> prioridad); 
+    printf(" %d\n", tareasOriginales -> precede);
+    if(tareasOriginales -> precede == true)
+    {
+      char *nombreLista = firstList(tareasOriginales -> precedencia);
+      
+      printf(" - Precedente:"); 
+      while(nombreLista != NULL)
+      {
+        printf(" %s", nombreLista);
+        nombreLista = nextList(tareasOriginales -> precedencia);
+      }
+      puts("");
+    }
+
+    eraseMap(mapaAux, tareaAux -> nombre);
+    heap_pop(pendientes);
+
+    Pair *aux = firstMap(mapaAux);
+    
+    while(aux != NULL)
+    {
+      Tarea *tareaList = aux -> value;
+      char *nombreLista = firstList(tareaList -> precedencia);
+
+      while(nombreLista != NULL)
+      {
+        if(strcmp(nombreAux, nombreLista) == 0) 
+        {
+          popCurrent(tareaList -> precedencia);
+        }
+        nombreLista = nextList(tareaList -> precedencia);
+      }
+      
+      if(firstList(tareaList -> precedencia) == NULL) tareaList -> precede = false;
+      aux = nextMap(mapaAux);
+    }
+  }
+}
+
+/*
+{  
+  
+  while (true)
+  {
+    poblarHeap(mapa, pendientes);
+
+    if(heap_top(pendientes) == NULL) 
+    {
+      
+      return;
+    }
+    
+    Pair *raizHeap = searchMap(mapa, heap_top(pendientes));
+    Tarea *tareaAux = raizHeap -> value;
+
+    char *nombreAux = tareaAux ->nombre;
+
+    
+    printf("\n%s (Prioridad: %d)", tareaAux -> nombre, tareaAux -> prioridad); 
+    if(tareaAux -> precede == true)
+    {
+      printf(" - Precedente:");
+      
+      char *nombreLista = firstList(tareaAux->precedencia);
+      
+      while(nombreLista != NULL)
+      {
+        printf(" %s", nombreLista);
+        nombreLista = nextList(tareaAux -> precedencia);
+      }
+    }
+    puts("");
+    printf("BOOM");
+    
+    heap_pop(pendientes);
+    eraseMap(mapa, tareaAux -> nombre);
+
+    Pair *aux = firstMap(mapa);
+    
+    while(aux != NULL)
+    {
+      tareaAux = aux -> value;
+      
+      if(aux == NULL) aux = nextMap(mapa);
+      else
+      {
+        char *nombreLista = firstList(tareaAux->precedencia);
+
+        while(nombreLista != NULL)
+        {
+          if(strcmp(nombreAux, nombreLista) == 0) 
+          {
+            popCurrent(tareaAux -> precedencia);
+            if(tareaAux -> precedencia == NULL) tareaAux -> precede = false;
+          }
+          else nombreLista = nextList(tareaAux -> precedencia);
+        }
+      }
+      aux = nextMap(mapa);
+    }
+  }
+  
   Heap *pendientes = createHeap();
   
   Pair *aux = firstMap(mapa);
@@ -240,8 +401,6 @@ void mostrarTareasPendientes(HashMap *mapa)
     }
     aux = nextMap(mapa);
   }
-
-
   
   while(heap_size(pendientes)>0)
   {
@@ -254,8 +413,6 @@ void mostrarTareasPendientes(HashMap *mapa)
 
     tareaActual->visitado = true;
     Pair *aux = firstMap(mapa);
-
-    
     
     while(aux!= NULL)
     {
@@ -269,12 +426,12 @@ void mostrarTareasPendientes(HashMap *mapa)
           {
             if(aux2->visitado != true)
             {
-              tienePrecedencia =false;
+              tienePrecedencia = false;
               break;
             }
             aux2 = nextList(auxTarea->precedencia);
           }
-        if(tienePrecedencia == true && auxTarea->visitado == true)
+        if(tienePrecedencia == false && auxTarea->visitado == false)
         {
           heap_push(pendientes,auxTarea->nombre,auxTarea->prioridad);
           auxTarea->visitado = true;
@@ -284,125 +441,8 @@ void mostrarTareasPendientes(HashMap *mapa)
     }
 
   }
-
-  /* fabian 
-  Pair *aux = firstMap(mapa);
-  
-  while(aux != NULL)
-  {
-    if(aux == NULL) aux = nextMap(mapa);
-    else
-    {
-      Tarea *tareaAux = aux -> value;
-      
-      if(tareaAux -> precede == false) 
-      {
-        heap_push(pendientes, tareaAux -> nombre, tareaAux -> prioridad);
-      }
-
-      aux = nextMap(mapa);
-    }
-  }
-
-
-  
-  aux = firstMap(mapa);
-  
-  while(aux != NULL)
-  {
-    if(aux == NULL) aux = nextMap(mapa);
-    else
-    {
-      aux = nextMap(mapa);
-
-      Pair *pairAux = searchMap(mapa, heap_top(pendientes));
-      Tarea *tareaAux = pairAux -> value;
-      Tarea *lista = firstList(tareaAux->precedencia);
-
-      printf("\nNombre: %s ", tareaAux -> nombre);
-      printf("Prioridad: %d ", tareaAux -> prioridad);
-      while(tareaAux -> precedencia == NULL)
-      {
-        printf("Precedente: %s", lista);
-      }
-      printf("\n");
-      
-      heap_pop(pendientes);
-
-      Pair *aux2 = firstMap(mapa);
-      while(aux2 != NULL)
-      {
-        if(aux2 == NULL) aux2 = nextMap(mapa);
-        else
-        {
-          tareaAux = aux2 -> value;
-
-          Tarea *tareaList = firstList(tareaAux -> precedencia);
-          while(tareaList != NULL)
-          {
-            if(strcmp(tareaList, tareaAux -> nombre) == 0);
-            {
-              popCurrent(tareaAux -> precedencia);
-              tareaAux -> precede = false;
-            }
-            tareaList = nextList(tareaAux -> precedencia);
-          }
-
-          aux2 = nextMap(mapa);
-        }
-      }
-    }
-  }
- */
-  
-  
-  
-  /*
-  Pair *aux = firstMap(mapa);
-  int cont = 1;
-
-  if(tareaAux -> precede == false) 
-      {
-        heap_push(pendientes, tareaAux -> nombre, tareaAux -> prioridad);
-      }
-
-  while(aux != NULL)
-  {
-    Tarea *tareaAux = aux -> value;
-
-    if(aux == NULL) aux = nextMap(mapa);
-    else 
-    {
-      
-      
-      if(cont == 1)
-      { 
-        puts("~~~~~~~~~~~~~~~~~ TAREAS PENDIENTES ~~~~~~~~~~~~~~~~~\n");
-      }
-      
-      printf("%d. %s (Prioridad: %d) ", cont, tareaAux -> nombre, tareaAux -> prioridad);
-      
-      if(tareaAux->precedencia != NULL)  
-      {
-        printf("- Precedente : ");
-        char *auxLista = firstList(tareaAux -> precedencia);
-        while(auxLista != NULL)
-        {
-          printf("%s ",auxLista);
-          auxLista = nextList(tareaAux -> precedencia);
-        }
-        printf("\n\n");
-      }
-      
-    }
-    
-      
-    aux = nextMap(mapa);
-    cont++;
-  }
-  puts("~~~~~~~~~~~~~~~~~~~~~~~~~~~o~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
-  */
 }
+*/
 
 // 4.
 void marcarTarea(HashMap *mapa, Pila *stack)
@@ -530,7 +570,7 @@ int main()
         }
           
       case 3 :
-        mostrarTareasPendientes(mapa);
+        mostrarTareasPendientes(mapa, pendientes);
         validar(&user_continue);
         break;
 

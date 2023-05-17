@@ -5,94 +5,78 @@
 #include <ctype.h>
 #include "heap.h"
 
-typedef struct nodo
-{
-  void *data;
-  int priority;
-} heapElem;
+typedef struct nodo{
+   void* data;
+   int priority;
+}heapElem;
 
-typedef struct Heap
-{
-  heapElem *heapArray;
+typedef struct Heap{
+  heapElem* heapArray;
   int size;
   int capac;
 } Heap;
 
-Heap *createHeap()
-{
-  Heap *h = malloc(sizeof(Heap));
 
-  h -> heapArray = malloc(3 * sizeof(Heap));
-  h -> size = 0;
-  h -> capac = 3;
-
-  return h;
+Heap* createHeap(){
+   Heap* monticulo = (Heap*) malloc(sizeof(Heap));
+   monticulo->heapArray = (heapElem*) calloc(3, sizeof(heapElem));
+   monticulo->size = 0;
+   monticulo->capac = 3;
+   return monticulo;
 }
 
-void *heap_top(Heap* pq)
+
+void* heap_top(Heap* pq)
 {
-  if(!pq -> size) return NULL;
-
-  return pq -> heapArray[0].data;
+  if(pq->size == 0) return NULL;
+  return pq->heapArray[0].data;
 }
-
-void *heap_top_priority(Heap* pq)
-{
-  if(!pq -> size) return NULL;
-
-  return pq -> heapArray[0].priority;
-}
-
 
 void heap_push(Heap* pq, void* data, int priority){
-
-  if(pq->size == pq->capac)
-  {
-    pq->capac = pq->capac * 2+1;
-    pq->heapArray = realloc(pq->heapArray,pq->capac * sizeof(heapElem));
+  if(pq->size == pq->capac){
+    pq->capac = pq->capac * 2 + 1;
+    pq->heapArray = (heapElem *) realloc(pq->heapArray, pq->capac * sizeof(heapElem));
   }
 
-  int posicion = pq->size;
+  int pos = pq->size;
 
-  while(priority > pq->heapArray[(posicion-1) / 2 ].priority && posicion)
-    {
-      pq->heapArray[posicion] = pq->heapArray[(posicion-1)/2];
-      posicion = (posicion -1) / 2;
-    }
-  pq->heapArray[posicion].data = data;
-  pq->heapArray[posicion].priority = priority;
+  while(pos > 0 && pq->heapArray[(pos-1)/2].priority > priority){
+    pq->heapArray[pos] = pq->heapArray[(pos-1)/2];
+    pos = (pos-1)/2;
+  }
+
+  pq->heapArray[pos].priority = priority;
+  pq->heapArray[pos].data = data;
   pq->size++;
 }
+
 int heap_size(Heap *pq)
 {
   return pq->size;
 }
 
-void heap_pop(Heap* pq){
+void heap_pop(Heap* pq)
+{
 
-  int hijoMenor = 1, hijoMayor = 2, pos = 0;
-  heapElem auxiliar;
+  pq->size--;
+  pq->heapArray[0] = pq->heapArray[pq->size];
   
-  pq -> size--;
-  pq -> heapArray[0] = pq -> heapArray[pq -> size];
+  int pos = 0;
+  int posI = 1;
+  int posD = 2;
   
-  while (hijoMenor < pq -> size)
-  {
-    int nodoHijo = hijoMenor;
+  while(posI < pq->size){
+    int hijo = posI;
+    if(posD < pq->size && pq->heapArray[posD].priority < pq->heapArray[posI].priority) hijo = posD;
+    if(pq->heapArray[pos].priority <= pq->heapArray[hijo].priority) break;
     
-    if (hijoMenor < pq -> size && pq -> heapArray[hijoMayor].priority > pq -> heapArray[hijoMenor].priority) nodoHijo = hijoMayor;
+    heapElem aux = pq->heapArray[pos];
+    pq->heapArray[pos] = pq->heapArray[hijo];
+    pq->heapArray[hijo] = aux;
     
-    if(pq -> heapArray[pos].priority >= pq -> heapArray[nodoHijo].priority) break;
+    pos = hijo;
+    posI = (posI * 2) + 1;
+    posD = (posD * 2) + 2;
     
-    auxiliar = pq -> heapArray[pos];
-    pq -> heapArray[pos] = pq -> heapArray[nodoHijo];
-    pq -> heapArray[nodoHijo] = auxiliar;
-    pos = nodoHijo;
-    hijoMenor = hijoMenor * 2 + 1;
-    hijoMayor = hijoMayor * 2 + 2;
   }
-  
-
-  
-
 }
