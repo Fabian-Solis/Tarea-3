@@ -20,6 +20,7 @@ typedef struct
   bool ingresadoHeap;
   int contList;
   bool restante;
+
 } Tarea; // Definimos nuestra estructura a trabajar.
 
 typedef struct
@@ -254,12 +255,11 @@ void establecerPrecedencia(HashMap *mapa, Pila *stack)
   {
     printf("\nUna o ambas tareas no han sido agregadas aún.\n\n");
     printf("Ingrese nombre de tareas validos");
-      getchar();
-      scanf("%30[^\n]s", nombreTarea1);
-      getchar();
-      printf("(Tarea Procedente): ");
-      scanf("%30[^\n]s", nombreTarea2);
-    
+    getchar();
+    scanf("%30[^\n]s", nombreTarea1);
+    getchar();
+    printf("(Tarea Procedente): ");
+    scanf("%30[^\n]s", nombreTarea2);
   }
   
   Pair *tareaPrecedente = searchMap(mapa,nombreTarea1);
@@ -357,7 +357,48 @@ void mostrarTareasPendientes(HashMap *mapa, Heap *pendientes, HashMap *mapaAux)
 // 4.
 void marcarTarea(HashMap *mapa, Pila *stack)
 {
-  Tarea *tareaAux;
+  
+  char nombreTarea[MAX], respuesta[MAX];
+  printf("Ingrese el Nombre de la Tarea a Eliminar\n");
+  getchar();
+  scanf("%30[^\n]s", nombreTarea);
+
+  Tarea *tareaEliminar = searchMap(mapa,nombreTarea)->value;
+  if(tareaEliminar->precede == true){
+    printf("¿Estás seguro que desea eliminar la tarea junto a sus precedentes?(s/n)\n");
+    getchar();
+    scanf("%c",respuesta);
+    if(respuesta == 'n'){
+      return;
+    }
+    else{
+      eraseMap(mapa,nombreTarea);
+      Tarea *mapaTareas = (Tarea*)firstMap(mapa);
+      while(mapaTareas!= NULL){
+
+        Tarea *listaTareas = (Tarea *)firstList(mapaTareas->precedencia);
+          while(listaTareas!= NULL){
+          if(listaTareas->nombre == nombreTarea){
+              popCurrent(listaTareas->precedencia);
+            }
+      
+            listaTareas = nextList(mapaTareas->precedencia);
+          }
+        
+      }
+      
+      
+    }
+    
+    
+  }
+  
+  
+  
+
+  
+  
+  
   
   
   
@@ -387,7 +428,7 @@ void deshacerAccion(HashMap *mapa, Pila *stack, int *registrada)
     eraseMap(mapa, tareaAux -> key);
     (*registrada)--;
   }
-  
+  /*
   else 
   if(strcmp(datoRegistro, "2") == 0)
   {
@@ -397,7 +438,7 @@ void deshacerAccion(HashMap *mapa, Pila *stack, int *registrada)
     printf("\nLa última acción fue deshecha y el ítem ' %s ' fue agregado!\n\n", item);
     jugadorAux->numeroItems++;
   }
-  /*
+  
   else 
   if(strcmp(datoRegistro, "4") == 0)
   {
@@ -414,6 +455,8 @@ void deshacerAccion(HashMap *mapa, Pila *stack, int *registrada)
 // 6.
 void importarTareas(HashMap *mapa)
 {
+  
+  
   printf("Funcion 6\n\n");
 }
 
