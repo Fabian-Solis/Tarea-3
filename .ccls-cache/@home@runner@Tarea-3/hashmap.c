@@ -159,7 +159,7 @@ void enlarge(HashMap * map) {
   free(old_buckets);
 }
 
-HashMap* copyHashMap(HashMap* original) {
+void* copyHashMap(HashMap* original) {
     HashMap* copy = malloc(sizeof(HashMap));
     copy -> size = original -> size;
     copy -> capacity = original -> capacity;

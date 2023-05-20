@@ -86,7 +86,7 @@ void validar(int *user_continue) // Validamos que el usuario desee seguir con la
   }
 }
 
-char *gets_csv_field(char *tmp, int k) //
+char *gets_csv_field(char *tmp, int k) // Obtenemos la linea k del archivo.
 {
   int open_mark = 0;
   char *ret = (char*) malloc(100 * sizeof(char));
@@ -131,15 +131,8 @@ char *gets_csv_field(char *tmp, int k) //
     return ret;
   }
 
-  if (last_field && k == j)
-  {
-    strcpy(ret + strlen(ret), tmp + ini_i);
-    return ret;
-  }
-  
   return NULL;
 }
-
 void preguntarNombreTarea(char *nombreTarea) // Solicita que el usuario ingrese el nombre de la tarea
 {
   printf("Ingrese el nombre de la tarea:\n");
@@ -150,17 +143,22 @@ void preguntarNombreTarea(char *nombreTarea) // Solicita que el usuario ingrese 
 void poblarHeap(HashMap *mapaAux, Heap *pendientes)
 {
   Pair *aux = firstMap(mapaAux);
+  int cont = 0;
   while(aux != NULL)
   {
     Tarea *tareaAux = aux -> value;
+    //printf("restante %d ", tareaAux -> restante);
     
     if(tareaAux -> restante == false && tareaAux -> ingresadoHeap == false) 
     {
       heap_push(pendientes, tareaAux -> nombre, tareaAux -> prioridad);
       tareaAux -> ingresadoHeap = true; 
+      cont++;
     }
+    
     aux = nextMap(mapaAux);
   }
+  //printf("contador: %d ", cont);
 }
 
 void reiniciarBool(HashMap *mapaAux, Heap *pendientes)
@@ -181,7 +179,6 @@ void reiniciarBool(HashMap *mapaAux, Heap *pendientes)
 HashMap* copiarMapa(HashMap* mapa)
 {
   HashMap* mapaCopia = createMap(10001);
-
   Pair* aux = firstMap(mapa);
   while (aux != NULL)
   {
@@ -190,10 +187,12 @@ HashMap* copiarMapa(HashMap* mapa)
 
     insertMap(mapaCopia, clave, valor);
     aux = nextMap(mapa);
+    
   }
 
   return mapaCopia;
 }
+
 void reiniciarheap(HashMap *mapaAux, Heap *pendientes)
 {
   Pair *aux = firstMap(mapaAux);
@@ -278,10 +277,12 @@ void establecerPrecedencia(HashMap *mapa, Pila *stack)
 }
 
 // 3. 
-void mostrarTareasPendientes(HashMap *mapa, Heap *pendientes, HashMap *mapaAux)
+void mostrarTareasPendientes(HashMap *mapa, Heap *pendientes)
 { 
+  HashMap *mapaAux = createMap(10001);
   mapaAux = copyHashMap(mapa);
   Pair *par = firstMap(mapaAux);
+
   
   while (par != NULL) 
   {
@@ -380,18 +381,15 @@ void marcarTarea(HashMap *mapa, Pila *stack)
         while(nombreLista != NULL){
           printf("%s",nombreLista);
           if(strcmp(nombreLista,nombreTarea)==0){
-        
+            
             popCurrent(tareaAux->precedencia);
+            tareaAux->precede = false;
           }
           nombreLista = nextList(tareaAux -> precedencia);
         }
         mapaTareas = nextMap(mapa);
         
       }
-
-        
-        
-       
     }
   }
   else{
@@ -406,6 +404,7 @@ void marcarTarea(HashMap *mapa, Pila *stack)
 // 5.
 void deshacerAccion(HashMap *mapa, Pila *stack, int *registrada)
 { 
+  
   char *datoRegistro = stack_pop(stack -> historial);
   printf("\n%c\n\n", *datoRegistro);
 
@@ -425,7 +424,6 @@ void deshacerAccion(HashMap *mapa, Pila *stack, int *registrada)
     eraseMap(mapa, tareaAux -> key);
     (*registrada)--;
   }
-  /*
   else 
   if(strcmp(datoRegistro, "2") == 0)
   {
@@ -435,7 +433,7 @@ void deshacerAccion(HashMap *mapa, Pila *stack, int *registrada)
     printf("\nLa última acción fue deshecha y el ítem ' %s ' fue agregado!\n\n", item);
     jugadorAux->numeroItems++;
   }
-  
+  /*
   else 
   if(strcmp(datoRegistro, "4") == 0)
   {
@@ -450,11 +448,75 @@ void deshacerAccion(HashMap *mapa, Pila *stack, int *registrada)
 }
 
 // 6.
-void importarTareas(HashMap *mapa)
-{
+void importarTareas(HashMap* mapa, int *registrada) {
+  char nombreArchivo[MAX];
   
+  printf("Ingrese el nombre del archivo a importar:\n");
+  scanf("%30s", nombreArchivo);
   
-  printf("Funcion 6\n\n");
+  FILE *fp = fopen(nombreArchivo, "r");
+  
+  if (fp == NULL)
+  {
+    printf("\nNo hay ningún archivo con ese nombre.\n\n");
+    return;
+  }
+  char delimit[] = " \t\r\n\v\f";
+  char linea[1024];
+  fgets(linea, 1024, fp);
+
+  while (fgets(linea, 1024, fp) != NULL) {
+    Tarea* nuevaTarea = (Tarea*)malloc(sizeof(Tarea));
+    nuevaTarea->precedencia = createList();
+    char* precedente = "";
+
+    for (int i = 0; i < 3; i++) {
+      char* aux = gets_csv_field(linea, i);
+      
+      if (i == 0) {
+        strcpy(nuevaTarea->nombre, aux);
+        nuevaTarea -> ingresadoHeap = false;
+        nuevaTarea -> restante = true;
+        (*registrada)++;
+      }
+      if (i == 1) {
+        int prioridad = atol(aux);
+        nuevaTarea->prioridad = prioridad;
+      }
+      if (i == 2) {
+        if (strlen(aux) > 1) {
+          precedente = strtok(aux, delimit); // tarea2
+          nuevaTarea->precede = true;
+          while (precedente != NULL) {
+            Tarea* tareaPrecedente = searchMap(mapa, precedente)->value;
+            if (tareaPrecedente != NULL) {
+              pushFront(nuevaTarea->precedencia, tareaPrecedente);
+            }
+            precedente = strtok(NULL, delimit);
+          }
+        } else {
+          nuevaTarea->precede = false;
+        }
+      }
+    }
+    insertMap(mapa, nuevaTarea->nombre, nuevaTarea);
+  }
+
+  fclose(fp);
+
+  // Impresión de los nombres de todas las tareas importadas
+  Pair* par = firstMap(mapa);
+  while (par != NULL) {
+    Tarea* tarea = (Tarea*)par->value;
+    printf("%s\n", tarea->nombre);
+    printf("%d\n", tarea->prioridad);
+    if (tarea->precede) {
+      printf("Tiene precedentes\n");
+    } else {
+      printf("No tiene precedentes\n");
+    }
+    par = nextMap(mapa);
+  }
 }
 
 // Programa principal
@@ -470,7 +532,7 @@ int main()
   */
 
   HashMap *mapa = createMap(10001);
-  HashMap *mapaAux = createMap(10001);
+  
 
   Heap *pendientes = createHeap();
 
@@ -521,7 +583,7 @@ int main()
         }
           
       case 3 :
-        mostrarTareasPendientes(mapa, pendientes, mapaAux);        
+        mostrarTareasPendientes(mapa, pendientes);        
         validar(&user_continue);
         break;
 
@@ -536,7 +598,8 @@ int main()
         break;
 
       case 6 :
-        importarTareas(mapa);
+        importarTareas(mapa, &registrada);
+        if(mapa != NULL) printf("boom");
         validar(&user_continue);
         break;
       

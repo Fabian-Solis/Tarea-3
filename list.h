@@ -29,4 +29,6 @@ void *searchList(List *list, void *data);
 
 void cleanList(List * list);
 
+int getLength(List *list);
+
 #endif /* List_h */

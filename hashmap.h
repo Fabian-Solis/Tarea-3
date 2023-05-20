@@ -30,5 +30,6 @@ Pair * firstMap(HashMap * table);
 Pair * nextMap(HashMap * table);
 
 void enlarge(HashMap * map);
+void * copyHashMap(HashMap* original);
 
 #endif /* HashMap_h */
