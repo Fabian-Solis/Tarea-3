@@ -162,8 +162,19 @@ void *searchList(List *list, void *data)
   return NULL;
 }
 
-
 void cleanList(List * list)
 {
   while (list->head != NULL) popFront(list);
+}
+
+int getLength(List *list) 
+{
+  int count = 0;
+  Node *current = list->head;
+  while (current != NULL) 
+  {
+    count++;
+    current = current->next;
+  }
+  return count;
 }

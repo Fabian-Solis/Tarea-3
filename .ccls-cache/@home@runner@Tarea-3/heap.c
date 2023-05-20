@@ -16,67 +16,62 @@ typedef struct Heap{
   int capac;
 } Heap;
 
-
 Heap* createHeap(){
-   Heap* monticulo = (Heap*) malloc(sizeof(Heap));
-   monticulo->heapArray = (heapElem*) calloc(3, sizeof(heapElem));
-   monticulo->size = 0;
-   monticulo->capac = 3;
-   return monticulo;
+   Heap *pq=(Heap*) malloc(sizeof(Heap));
+   pq->heapArray=(heapElem*) malloc(3*sizeof(heapElem));
+   pq->size=0;
+   pq->capac=3; //capacidad inicial
+   return pq;
 }
 
 
-void* heap_top(Heap* pq)
-{
-  if(pq->size == 0) return NULL;
-  return pq->heapArray[0].data;
+void* heap_top(Heap* pq){
+    if(pq->size == 0) return NULL;
+    return pq->heapArray[0].data;
 }
+
+//funcion del profe
 
 void heap_push(Heap* pq, void* data, int priority){
-  if(pq->size == pq->capac){
-    pq->capac = pq->capac * 2 + 1;
-    pq->heapArray = (heapElem *) realloc(pq->heapArray, pq->capac * sizeof(heapElem));
-  }
+    
+    if(pq->size + 1 > pq->capac){
+        pq->capac = (pq->capac) * 2 + 1;
+        pq->heapArray = realloc(pq->heapArray, (pq->capac) * sizeof(heapElem));
+    }
 
-  int pos = pq->size;
+    // Flotación 
+    int now = pq->size;
+    while (now > 0 && pq->heapArray[(now-1)/2].priority > priority) {
+        pq->heapArray[now] = pq->heapArray[(now-1)/2];
+        now = (now - 1) / 2;
+    }
+    pq->heapArray[now].priority = priority;
+    pq->heapArray[now].data = data;
+    pq->size++;
+}
 
-  while(pos > 0 && pq->heapArray[(pos-1)/2].priority > priority){
-    pq->heapArray[pos] = pq->heapArray[(pos-1)/2];
-    pos = (pos-1)/2;
-  }
+void heap_pop(Heap* pq)
+{
+    pq->size--;
+    pq->heapArray[0] = pq->heapArray[pq->size];
+    int priority = pq->heapArray[0].priority;
 
-  pq->heapArray[pos].priority = priority;
-  pq->heapArray[pos].data = data;
-  pq->size++;
+    int now = 1;
+  
+    while ((now <= pq->size && pq->heapArray[now].priority < priority) || (now + 1 <= pq->size && pq->heapArray[now + 1].priority < priority)) {
+        heapElem tmp = pq->heapArray[(now - 1) / 2];
+        if (now + 1 <= pq->size && pq->heapArray[now].priority > pq->heapArray[now + 1].priority) {
+            now++;
+        }
+
+        pq->heapArray[(now - 1) / 2] = pq->heapArray[now];
+        pq->heapArray[now] = tmp;
+
+        now = now * 2 + 1;
+    }
 }
 
 int heap_size(Heap *pq)
 {
   return pq->size;
-}
-
-void heap_pop(Heap* pq)
-{
-
-  pq->size--;
-  pq->heapArray[0] = pq->heapArray[pq->size];
-  
-  int pos = 0;
-  int posI = 1;
-  int posD = 2;
-  
-  while(posI < pq->size){
-    int hijo = posI;
-    if(posD < pq->size && pq->heapArray[posD].priority < pq->heapArray[posI].priority) hijo = posD;
-    if(pq->heapArray[pos].priority <= pq->heapArray[hijo].priority) break;
-    
-    heapElem aux = pq->heapArray[pos];
-    pq->heapArray[pos] = pq->heapArray[hijo];
-    pq->heapArray[hijo] = aux;
-    
-    pos = hijo;
-    posI = (posI * 2) + 1;
-    posD = (posD * 2) + 2;
-    
-  }
 }

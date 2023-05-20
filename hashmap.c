@@ -159,4 +159,25 @@ void enlarge(HashMap * map) {
   free(old_buckets);
 }
 
-
+HashMap* copyHashMap(HashMap* original) {
+    HashMap* copy = malloc(sizeof(HashMap));
+    copy -> size = original -> size;
+    copy -> capacity = original -> capacity;
+    copy -> current = original -> current;
+    
+    // Allocate memory for buckets
+    copy -> buckets = malloc(original -> capacity * sizeof(Pair*));
+    
+    // Copy each pair from the original HashMap to the copy
+    for (int i = 0; i < original -> capacity; i++) {
+        if (original -> buckets[i] != NULL) {
+            Pair* originalPair = original -> buckets[i];
+            Pair* copyPair = createPair(originalPair -> key, originalPair -> value);
+            copy -> buckets[i] = copyPair;
+        } else {
+            copy -> buckets[i] = NULL;
+        }
+    }
+    
+    return copy;
+}
