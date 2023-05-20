@@ -44,10 +44,10 @@ void validarOpcion(int *opcion) // Valida las opciones del menú.
     {
       *opcion = atoi(opcionAux);
         
-      if (*opcion >= 1 && *opcion <= 7) break;
-      else printf("Debe ingresar un número válido entre 1 y 7.\n");
+      if (*opcion >= 0 && *opcion <= 6) break;
+      else printf("Debe ingresar un número válido entre 0 y 6.\n");
     }
-    else printf("Debe ingresar un número válido entre 1 y 7.\n");
+    else printf("Debe ingresar un número válido entre 0 y 6.\n");
     
     getchar();
   }
@@ -63,7 +63,7 @@ void menu() // Opciones del menú.
   printf("4. Marcar tarea completada.\n");
   printf("5. Deshacer última acción.\n");
   printf("6. Importar tareas.\n");
-  printf("7. Salir del programa.\n\n");
+  printf("0. Salir del programa.\n\n");
 }
 
 void validar(int *user_continue) // Validamos que el usuario desee seguir con la ejecución del programa.
@@ -357,7 +357,6 @@ void mostrarTareasPendientes(HashMap *mapa, Heap *pendientes, HashMap *mapaAux)
 // 4.
 void marcarTarea(HashMap *mapa, Pila *stack)
 {
-  
   char nombreTarea[MAX], respuesta[MAX];
   printf("Ingrese el Nombre de la Tarea a Eliminar\n");
   getchar();
@@ -368,41 +367,39 @@ void marcarTarea(HashMap *mapa, Pila *stack)
     printf("¿Estás seguro que desea eliminar la tarea junto a sus precedentes?(s/n)\n");
     getchar();
     scanf("%c",respuesta);
-    if(respuesta == 'n'){
+    if(strcmp(respuesta, "n") == 0){
       return;
     }
     else{
       eraseMap(mapa,nombreTarea);
-      Tarea *mapaTareas = (Tarea*)firstMap(mapa);
-      while(mapaTareas!= NULL){
+      Pair *mapaTareas = (Pair*)firstMap(mapa);
 
-        Tarea *listaTareas = (Tarea *)firstList(mapaTareas->precedencia);
-          while(listaTareas!= NULL){
-          if(listaTareas->nombre == nombreTarea){
-              popCurrent(listaTareas->precedencia);
-            }
-      
-            listaTareas = nextList(mapaTareas->precedencia);
+      while(mapaTareas!= NULL){
+        Tarea *tareaAux = (Tarea*) mapaTareas->value;
+        char *nombreLista = (char*)firstList(tareaAux->precedencia);
+        while(nombreLista != NULL){
+          printf("%s",nombreLista);
+          if(strcmp(nombreLista,nombreTarea)==0){
+        
+            popCurrent(tareaAux->precedencia);
           }
+          nombreLista = nextList(tareaAux -> precedencia);
+        }
+        mapaTareas = nextMap(mapa);
         
       }
-      
-      
+
+        
+        
+       
     }
-    
-    
+  }
+  else{
+    eraseMap(mapa,nombreTarea);
+    free(tareaEliminar);
   }
   
-  
-  
-
-  
-  
-  
-  
-  
-  
-  
+  printf("La accion a sido marcada\n");
   stack_push(stack -> historial, "4");
 }
 
@@ -498,7 +495,7 @@ int main()
     
     validarOpcion(&opcion); // Validamos que opción sea un número.
     
-    if(registrada == 0 && opcion != 1 && opcion != 6 && opcion != 7 && opcion != 2)
+    if(registrada == 0 && opcion != 1 && opcion != 6 && opcion != 0 && opcion != 2)
     {
       printf("No hay tareas agregadas, debe registrar una primero.\n");
     }
@@ -543,7 +540,7 @@ int main()
         validar(&user_continue);
         break;
       
-      case 7 :
+      case 0 :
         printf("Gracias por usar el programa, adiós!");
         return 0;
     }
