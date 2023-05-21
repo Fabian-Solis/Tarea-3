@@ -20,6 +20,7 @@ typedef struct
   bool ingresadoHeap;
   int contList;
   bool restante;
+  Stack *listaPrecedentes;
 
 } Tarea; // Definimos nuestra estructura a trabajar.
 
@@ -27,10 +28,12 @@ typedef struct
 {
   Stack *historial;
   Stack *agregadas;
-  Stack *marcadas;
+  Stack *precedencias;
+  Stack *eliminada;
 } Pila;
 
 // Subfunciones
+
 void validarOpcion(int *opcion) // Valida las opciones del menú.
 {
   char opcionAux[MAX];
@@ -174,8 +177,6 @@ void reiniciarBool(HashMap *mapaAux, Heap *pendientes)
   }
 }
 
-// Funciones 
-
 HashMap* copiarMapa(HashMap* mapa)
 {
   HashMap* mapaCopia = createMap(10001);
@@ -205,11 +206,14 @@ void reiniciarheap(HashMap *mapaAux, Heap *pendientes)
   }
 }
 
+// Funciones 
+
 // 1.
 void agregarTarea(HashMap *mapa, Pila *stack, int *registrada)
 {
   Tarea *tareaAux = malloc(sizeof(Tarea));
   tareaAux->precedencia = createList();
+  tareaAux -> listaPrecedentes = stack_create();
 
   char nombreTarea[MAX];
   int prioridad;
@@ -232,6 +236,8 @@ void agregarTarea(HashMap *mapa, Pila *stack, int *registrada)
   tareaAux -> ingresadoHeap = false;
   tareaAux -> restante = true;
 
+  
+
   stack_push(stack -> historial, "1");
   stack_push(stack -> agregadas, par);
   
@@ -253,12 +259,7 @@ void establecerPrecedencia(HashMap *mapa, Pila *stack)
   if(searchMap(mapa, nombreTarea1) == NULL || searchMap(mapa, nombreTarea2) == NULL)
   {
     printf("\nUna o ambas tareas no han sido agregadas aún.\n\n");
-    printf("Ingrese nombre de tareas validos");
-    getchar();
-    scanf("%30[^\n]s", nombreTarea1);
-    getchar();
-    printf("(Tarea Procedente): ");
-    scanf("%30[^\n]s", nombreTarea2);
+    return;
   }
   
   Pair *tareaPrecedente = searchMap(mapa,nombreTarea1);
@@ -269,6 +270,8 @@ void establecerPrecedencia(HashMap *mapa, Pila *stack)
   tareaAux2 -> precede = true;
   pushFront(tareaAux2->precedencia,tareaAux);
 
+  stack_push(stack -> precedencias, tareaAux -> nombre);
+  stack_push(stack -> precedencias, tareaAux2 -> nombre);
   stack_push(stack -> historial, "2");
   
   printf("\nPrecedencia establecida!!\n\n");
@@ -356,59 +359,58 @@ void mostrarTareasPendientes(HashMap *mapa, Heap *pendientes)
 }
 
 // 4.
-void marcarTarea(HashMap *mapa, Pila *stack)
+void marcarTarea(HashMap *mapa, Pila *stack , int *registrada)
 {
   char nombreTarea[MAX], respuesta[MAX];
-  printf("Ingrese el Nombre de la Tarea a Eliminar\n");
+  printf("Ingrese el nombre de la tarea a eliminar: \n");
   getchar();
   scanf("%30[^\n]s", nombreTarea);
 
-  Tarea *tareaEliminar = searchMap(mapa,nombreTarea)->value;
-  if(tareaEliminar->precede == true){
-    printf("¿Estás seguro que desea eliminar la tarea junto a sus precedentes?(s/n)\n");
+  Pair *aux = searchMap(mapa,nombreTarea);
+  Tarea *tareaEliminar = aux->value;
+  
+  if(tareaEliminar->precede == true)
+  {
+    printf("\n¿Está seguro que desea eliminar la tarea? (s/n)\n");
     getchar();
     scanf("%c",respuesta);
-    if(strcmp(respuesta, "n") == 0){
-      return;
-    }
-    else{
-      eraseMap(mapa,nombreTarea);
-      Pair *mapaTareas = (Pair*)firstMap(mapa);
+    if(strcmp(respuesta, "n") == 0) return;
+  }
 
-      while(mapaTareas!= NULL){
-        Tarea *tareaAux = (Tarea*) mapaTareas->value;
-        char *nombreLista = (char*)firstList(tareaAux->precedencia);
-        while(nombreLista != NULL){
-          printf("%s",nombreLista);
-          if(strcmp(nombreLista,nombreTarea)==0){
-            
-            popCurrent(tareaAux->precedencia);
-            tareaAux->precede = false;
-          }
-          nombreLista = nextList(tareaAux -> precedencia);
-        }
-        mapaTareas = nextMap(mapa);
+  eraseMap(mapa,nombreTarea);
+  Pair *mapaTareas = (Pair*)firstMap(mapa);
+
+  while(mapaTareas!= NULL)
+  {
+    Tarea *tareaAux = (Tarea*) mapaTareas->value;
+    char *nombreLista = (char*)firstList(tareaAux->precedencia);
+    while(nombreLista != NULL)
+    {
+      if(strcmp(nombreLista,nombreTarea) == 0)
+      { 
+        stack_push(tareaEliminar -> listaPrecedentes, tareaAux -> nombre);
+        popCurrent(tareaAux->precedencia);
         
       }
+      nombreLista = nextList(tareaAux -> precedencia);
     }
-  }
-  else{
-    eraseMap(mapa,nombreTarea);
-    free(tareaEliminar);
+    if(firstList(tareaAux -> precedencia) == NULL) tareaAux -> precede = false;
+    mapaTareas = nextMap(mapa);
   }
   
-  printf("La accion a sido marcada\n");
+  printf("\nLa tarea ha sido marcada como completada y eliminada!!\n\n");
+  (*registrada)--;
+
+  stack_push(stack -> eliminada, tareaEliminar);
   stack_push(stack -> historial, "4");
 }
 
 // 5.
 void deshacerAccion(HashMap *mapa, Pila *stack, int *registrada)
 { 
-  
   char *datoRegistro = stack_pop(stack -> historial);
-  printf("\n%c\n\n", *datoRegistro);
+  printf("%c\n", *datoRegistro);
 
-  
   if(strcmp(datoRegistro, "0") == 0)
   {
     printf("\nNo se pueden deshacer más acciones. \n\n");
@@ -419,7 +421,7 @@ void deshacerAccion(HashMap *mapa, Pila *stack, int *registrada)
   {
     Pair *tareaAux = stack_pop(stack -> agregadas);
 
-    printf("\nLa última acción fue deshecha y la tarea ' %s ' fue eliminada!\n\n", tareaAux -> key);
+    printf("\nLa última acción fue deshecha y la tarea ' %s ' fue eliminada!!\n\n", tareaAux -> key);
     
     eraseMap(mapa, tareaAux -> key);
     (*registrada)--;
@@ -427,23 +429,48 @@ void deshacerAccion(HashMap *mapa, Pila *stack, int *registrada)
   else 
   if(strcmp(datoRegistro, "2") == 0)
   {
-    char *item = stack_pop(jugadorAux -> registroItem);
-    insertMap(jugadorAux -> items, item, NULL);
-    
-    printf("\nLa última acción fue deshecha y el ítem ' %s ' fue agregado!\n\n", item);
-    jugadorAux->numeroItems++;
+    char *nombreTareaProcedente = stack_pop(stack -> precedencias);
+    char *nombreTareaPrecedente = stack_pop(stack -> precedencias);
+
+    Pair *aux = searchMap(mapa, nombreTareaProcedente);
+    Tarea *tareaAux = aux -> value;
+
+    char *nombreLista = firstList(tareaAux -> precedencia);
+
+    while(nombreLista != NULL)
+    {
+      if(strcmp(nombreLista, nombreTareaPrecedente) == 0)
+      {
+        popCurrent(tareaAux -> precedencia);
+        
+      }
+      nombreLista = nextList(tareaAux -> precedencia);
+    }
+    if(firstList(tareaAux -> precedencia) == NULL) tareaAux -> precede = false;
+    printf("\nLa última acción fue deshecha y el precedente ' %s ' de la tarea ' %s ' fue eliminada!!\n\n", nombreTareaPrecedente, nombreTareaProcedente);
   }
-  /*
   else 
   if(strcmp(datoRegistro, "4") == 0)
   {
-    //usar resgistroSum para restarle lo previamente sumado
-    char *auxSum = stack_pop(jugadorAux -> registroSum);
-    int numSum = atoi(auxSum);
-    jugadorAux -> puntosHabilidad = jugadorAux -> puntosHabilidad - numSum;
-    printf("\nLa última acción fue deshecha y al jugador se le disminuyeron ' %i ' puntos!\n\n", numSum);
+    Tarea *tareaMapa = stack_pop(stack -> eliminada);
+    insertMap(mapa, tareaMapa -> nombre, tareaMapa);
+
+    char *nombreTarea = stack_pop(tareaMapa -> listaPrecedentes);
+    
+    while(nombreTarea != NULL)
+    {
+      Pair *aux = searchMap(mapa, nombreTarea);
+      Tarea *tareaAux = aux -> value;
+      
+      pushBack(tareaAux -> precedencia, tareaMapa -> nombre);
+      tareaAux -> precede = true;
+      
+      nombreTarea = stack_pop(tareaMapa -> listaPrecedentes);
+    }
+
+    (*registrada)++;
+    printf("\nLa última acción fue deshecha y la tarea ' %s ' fue agregada!!\n\n", tareaMapa -> nombre);
   }
-  */
   
 }
 
@@ -461,6 +488,7 @@ void importarTareas(HashMap* mapa, int *registrada) {
     printf("\nNo hay ningún archivo con ese nombre.\n\n");
     return;
   }
+  
   char delimit[] = " \t\r\n\v\f";
   char linea[1024];
   fgets(linea, 1024, fp);
@@ -503,20 +531,7 @@ void importarTareas(HashMap* mapa, int *registrada) {
   }
 
   fclose(fp);
-
-  // Impresión de los nombres de todas las tareas importadas
-  Pair* par = firstMap(mapa);
-  while (par != NULL) {
-    Tarea* tarea = (Tarea*)par->value;
-    printf("%s\n", tarea->nombre);
-    printf("%d\n", tarea->prioridad);
-    if (tarea->precede) {
-      printf("Tiene precedentes\n");
-    } else {
-      printf("No tiene precedentes\n");
-    }
-    par = nextMap(mapa);
-  }
+ 
 }
 
 // Programa principal
@@ -540,7 +555,8 @@ int main()
   stack -> historial = stack_create();
   stack_push(stack -> historial, "0");
   stack -> agregadas = stack_create();
-  stack -> marcadas = stack_create();
+  stack -> precedencias = stack_create();
+  stack -> eliminada = stack_create();
   
   
   int user_continue = 1;
@@ -557,7 +573,7 @@ int main()
     
     validarOpcion(&opcion); // Validamos que opción sea un número.
     
-    if(registrada == 0 && opcion != 1 && opcion != 6 && opcion != 0 && opcion != 2)
+    if(registrada == 0 && opcion != 1 && opcion != 6 && opcion != 0 && opcion != 2 && opcion != 5)
     {
       printf("No hay tareas agregadas, debe registrar una primero.\n");
     }
@@ -588,7 +604,7 @@ int main()
         break;
 
       case 4 :
-        marcarTarea(mapa, stack);
+        marcarTarea(mapa, stack, &registrada);
         validar(&user_continue);
         break;
 
