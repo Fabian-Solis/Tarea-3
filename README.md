@@ -2,7 +2,7 @@
 
 ## **Uso**
 
-Para una correcta ejecución de nuestra tarea y poder tener un acceso al programa sin errores, se debe escribir en consola ```./Tarea2```, si es que ya no hay un archivo existente.
+Para una correcta ejecución de nuestra tarea y poder tener un acceso al programa sin errores, se debe escribir en consola ```./Tarea3```, si es que ya no hay un archivo existente.
 
 ## **Herramientas utilizadas**
 * [Replit](https://replit.com): Utilizamos esta herramienta mayoritariamente para facilitar el desarrollo del código de manera conjunta.
@@ -11,82 +11,50 @@ Para una correcta ejecución de nuestra tarea y poder tener un acceso al program
 
 ## Funcionamiento del programa
 
-Es ideal que cuando el programa pregunte si es que desea realizar otra operación, solo ingrese una s o una n, ya que si no el programa comienza a dar errores en todo lo que le sigue, ya que no validamos específicamente si ingresa otra letra.
+* Es ideal que no se reingrese tareas que ya son precedentes, debido a que no validamos que ya esten ingresadas, esto puede ocasionar algun error inesperado en otra funcion.
+* Es ideal que el usuario ingrese lo pedido en las preguntas de s/n en especial en la funcion 4 debido a que no hay una validacion de los caracteres.
+* Aparte de esos detalles el programa deberia funcionar bien.
 
-Es ideal que el archivo csv al importar, termine en un espacio "".
-
-Además de esos detalles, el programa funciona correctamente.
 
 ## Aportes grupales, trabajo en equipo, retroalimentación y trabajo grupal
 
 ### Aporte individual
-
-* José Lara Arce:
-  
-  1. Encargado de la estructuración general del programa en ```main.c``` (menú y variables asociadas) y ```README.md```.
-  2. Encargado de la creación de las funciones ```crearPerfil``` y ```mostrarPerfil()```.
-  3. Encargado de las subfunciones ```validar()``` y ```preguntarNombreUsuario```.
-  4. Aporte en la creación de la función ```desahacerAccion()``` (Función fue hecha grupalmente).
-  ---
-  
-* Claudio Toledo:
-  
-  1. Encargado de hacer la funcion ```importarJugadoresCSV``` , ```agregarPuntosHabilidad```
-  2. Aportes generales en la 7ma funcion ```deshacerAccion```
-     
-  ---
-
 * Fabián Solís:
   
-  1. Encargado de hacer las funciones ```agregarItem()``` y ```eliminarItem()```.
-  2. Aporte en la creación de la función ```desahacerAccion()```.
-  3. Revisión a detalle del código (estructura, ortografía, printf() y correcto funcionamiento general).
+  1. Creador de las funciones ```agregarTarea ``` ```mostrarTareasPendientes ```  ```deshaserAccion``` y de la funcion ```Main.```
+  2. Apoyo a la logica de funcion ```marcarTarea ``` ```importarTareas ```
+  3. Revisa a detalle cada funcion para su correcto funcionamiento.
 
   ---
 
 * Matías Villegas:
 
-  1. Encargado de hacer la funciones ```mostrarJugadoresConItemEsp``` y ```exportarJugadoresCSV```
-  2. Aporte en la creacion de la funcion ```desahacerAccion()```.
-  3. Revision detalle el registro de las pilas de registroItem.
+  1. Creador de las funciones ```establecerPrecedencia``` ```marcarTarea ``` ```importarTarea ``` ``` ``` y de la ```struck``` el que utilizamos.
+  2. Apoyo a la logica de la funcion ```mostrarTareasPendientes ``` ```deshaserAccion```
+  3. Revisa a detalle el nombre de las variable junto con su casting.
   
   ---
 ### Trabajo grupal
 
-Buen trabajo y trato en equipo, y armonía entre intregrantes comprometidos.
-* Aspectos a mejorar: Comunicación en repartición de trabajo.
+* Buen Trabajo en Pareja, escelente comunicacion y Distribucion del trabajo
+* Aspectos a mejorar: Mejorar la organizacion del codigo.
 ---
 ### Retroalimentación grupal:
 
-* José Lara Arce:
-  
-  * Aspectos positivos: Buena dispocición, dedicado, esforzado.
-    
-  * Aspectos a mejorar: Comunicación, intentar organizarze más con el grupo. 
-
 ---
-
-* Claudio Toledo:
-  
-  * Aspectos positivos: Buena dispocición, dedicado, esforzado y trabajador.
-  
-  * Aspectos a mejorar: Comunicación, organizarse mejor, preguntar más al profe si tenemos dudas con el código.
-
----
-
 * Fabián Solís:
   
-  * Aspectos positivos: Buena disposición, trabajador.
+  * Aspectos positivos:Buena disposición, trabajador,Buena comunicacion.
   
-  * Aspectos a mejorar: Comunicación, organizarze mejor.
+  * Aspectos a mejorar: Falta organizacion en el codigo, Falta de casting.
 
 ---
 
 * Matías Villegas:
   
-  * Aspectos positivos: Particpipativo, Buena disposicion.
+  * Aspectos positivos: Particpipativo, Buena disposicion,Buena organizacion.
   
-  * Aspectos a mejorar: Falta organización.
+  * Aspectos a mejorar: Falta organizacion, .
 
 ---
 
