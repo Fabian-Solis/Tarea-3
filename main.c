@@ -446,7 +446,6 @@ void deshacerAccion(HashMap *mapa, Pila *stack, int *registrada) // Deshacemos l
       nombreTarea = stack_pop(tareaMapa -> listaPrecedentes);
     }
     
-    stack_push(stack -> agregadas, tareaMapa);
     (*registrada)++;
     printf("La última acción fue deshecha y la tarea ' %s ' fue agregada!!\n\n", tareaMapa -> nombre);
   }
